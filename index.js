@@ -38,14 +38,22 @@
     }
   }
 
+  const IMG_EXT = /\.(png|jpe?g|gif|webp|bmp|avif)(\?|$)/i;
+  const urlOf = (o) => o?.url ?? o?.proxy_url ?? o?.proxyURL ?? o?.proxyUrl;
+
   function findImageUrl(message) {
-    const att = message.attachments?.find(
-      (a) => a.content_type?.startsWith("image/") || (a.width && a.height)
-    );
+    const att = message.attachments?.find((a) => {
+      const type = a.content_type ?? a.contentType;
+      return (
+        type?.startsWith?.("image/") ||
+        (a.width && a.height) ||
+        IMG_EXT.test(a.filename ?? urlOf(a) ?? "")
+      );
+    });
     return (
-      att?.url ??
-      message.embeds?.find((e) => e.image?.url)?.image?.url ??
-      message.embeds?.find((e) => e.thumbnail?.url)?.thumbnail?.url
+      urlOf(att) ??
+      urlOf(message.embeds?.find((e) => urlOf(e.image))?.image) ??
+      urlOf(message.embeds?.find((e) => urlOf(e.thumbnail))?.thumbnail)
     );
   }
 
