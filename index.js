@@ -73,10 +73,15 @@
       (x) => Array.isArray(x) && x[0]?.type?.name === "ActionSheetRowGroup"
     );
     const children = groups?.[1]?.props?.children;
+    dbg(
+      "groups=" + (groups ? groups.length : "なし") +
+      " g1children=" + (Array.isArray(children) ? children.length : typeof children) +
+      " labels=" + (Array.isArray(children) ? children.map((c) => c?.props?.label ?? c?.props?.message ?? c?.type?.name ?? "?").join("|") : "-")
+    );
     if (Array.isArray(children) && children.length) {
       if (children.some((c) => c?.key === KEY)) return;
       const template = children.find((c) => c?.type);
-      if (!template) return;
+      if (!template) { dbg("templateなし"); return; }
       const tIcon = template.props?.icon;
       const row = React.createElement(template.type, {
         key: KEY,
@@ -106,6 +111,7 @@
       );
       if (i !== -1) children.splice(i + 1, 0, row);
       else children.push(row);
+      dbg("グループに追加 i=" + i + " len=" + children.length);
       return;
     }
 
@@ -118,6 +124,7 @@
     );
     if (Array.isArray(buttons)) {
       if (buttons.some((c) => c?.key === KEY)) return;
+      dbg("旧レイアウトに追加 len=" + buttons.length);
       buttons.push(
         React.createElement(Forms.FormRow, {
           key: KEY,
