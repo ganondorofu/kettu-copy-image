@@ -3,6 +3,6 @@
   "description": "画像の長押しメニューに「画像をコピー」を追加し、クリップボードへ画像そのものをコピーします。",
   "authors": [{ "name": "komeniki" }],
   "main": "index.js",
-  "hash": "05e2a247cfeb830bcf712292208aea749a34649a",
+  "hash": "4c2b64aa601d8e5fcbded003bc0485fd7a18038e",
   "vendetta": { "icon": "ic_message_copy" }
 }
