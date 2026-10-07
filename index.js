@@ -11,6 +11,11 @@
   const LABEL = "画像をコピー";
   const KEY = "copy-image";
   const unpatches = [];
+  const dbg = (m) => {
+    console.log("[CopyImage] " + m);
+    try { showToast("[CI] " + m); } catch {}
+  };
+  dbg("ロード完了");
 
   function toBase64(url) {
     return fetch(url)
@@ -122,15 +127,17 @@
         })
       );
     } else {
-      console.log("[CopyImage] 未知のActionSheet構造");
+      dbg("未知のActionSheet構造");
     }
   }
 
   unpatches.push(
     before("openLazy", ActionSheet, ([component, key, msg]) => {
       const message = msg?.message;
+      dbg("sheet: " + key + " msg=" + !!message);
       if (key !== "MessageLongPressActionSheet" || !message) return;
       const url = findImageUrl(message);
+      dbg("url=" + (url ? "あり" : "なし att=" + message.attachments?.length + " emb=" + message.embeds?.length));
       if (!url) return;
 
       Promise.resolve(component)
@@ -139,9 +146,12 @@
           const unpatch = after("default", instance, (_, sheet) => {
             React.useEffect(() => () => unpatch(), []);
             try {
+              dbg("inject開始");
               inject(sheet, url);
+              dbg("inject完了");
             } catch (e) {
               console.error("[CopyImage]", e);
+              dbg("injectエラー: " + (e?.message ?? e));
             }
           });
         })
