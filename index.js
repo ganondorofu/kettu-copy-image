@@ -4,8 +4,11 @@
   const { React, clipboard } = vendetta.metro.common;
   const { getAssetIDByName } = vendetta.ui.assets;
   const { showToast } = vendetta.ui.toasts;
+  const { findInReactTree } = vendetta.utils;
 
   const ActionSheet = findByProps("openLazy", "hideActionSheet");
+  const ActionSheetRow =
+    findByProps("ActionSheetRow")?.ActionSheetRow ?? vendetta.ui.components.Forms.FormRow;
   const unpatches = [];
 
   function toBase64(url) {
@@ -34,34 +37,42 @@
     }
   }
 
-  function makeRow(base, url) {
-    const icon = getAssetIDByName("ic_message_copy");
-    const props = { key: "copy-image", label: "画像をコピー", onPress: () => copyImage(url) };
-    // ActionSheetRow 系は icon、FormRow 系は leading
-    if (React.isValidElement(base.props.icon))
-      props.icon = React.cloneElement(base.props.icon, { source: icon });
-    if (React.isValidElement(base.props.leading))
-      props.leading = React.cloneElement(base.props.leading, { source: icon });
-    return React.cloneElement(base, props);
+  function findImageUrl(message) {
+    const att = message.attachments?.find(
+      (a) => a.content_type?.startsWith("image/") || (a.width && a.height)
+    );
+    return (
+      att?.url ??
+      message.embeds?.find((e) => e.image?.url)?.image?.url ??
+      message.embeds?.find((e) => e.thumbnail?.url)?.thumbnail?.url
+    );
   }
 
   unpatches.push(
-    before("openLazy", ActionSheet, ([component, key]) => {
-      if (key !== "MediaShareActionSheet") return;
+    before("openLazy", ActionSheet, ([component, key, msg]) => {
+      const message = msg?.message;
+      if (key !== "MessageLongPressActionSheet" || !message) return;
+      const url = findImageUrl(message);
+      if (!url) return;
+
       component.then((instance) => {
-        const unpatch = after("default", instance, ([{ syncer }], res) => {
+        const unpatch = after("default", instance, (_, res) => {
           React.useEffect(() => () => unpatch(), []);
           try {
-            let source = syncer.sources[syncer.index.value];
-            if (Array.isArray(source)) source = source[0];
-            const url = source.sourceURI ?? source.uri;
-            const rows = res?.props?.children?.props?.children;
-            if (!url || !Array.isArray(rows) || rows.some((r) => r?.key === "copy-image")) return;
+            const buttons = findInReactTree(
+              res,
+              (c) =>
+                Array.isArray(c) &&
+                c.some((x) => x?.type?.name === "ButtonRow" || x?.type?.name === "ActionSheetRow")
+            );
+            if (!buttons || buttons.some((b) => b?.props?.label === "画像をコピー")) return;
 
-            const idx = rows.findIndex((r) => /save|保存/i.test(String(r?.props?.label ?? "")));
-            const base = rows[idx >= 0 ? idx : 0];
-            if (!base?.props) return;
-            rows.splice(idx >= 0 ? idx + 1 : rows.length, 0, makeRow(base, url));
+            const icon = getAssetIDByName("ic_message_copy");
+            const props = { label: "画像をコピー", onPress: () => copyImage(url) };
+            if (ActionSheetRow.Icon)
+              props.icon = React.createElement(ActionSheetRow.Icon, { source: icon });
+            else props.leading = React.createElement(vendetta.ui.components.Forms.FormIcon, { source: icon });
+            buttons.push(React.createElement(ActionSheetRow, props));
           } catch (e) {
             console.error("[CopyImage]", e);
           }
