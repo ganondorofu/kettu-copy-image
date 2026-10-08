@@ -11,11 +11,16 @@
   const LABEL = "画像をコピー";
   const KEY = "copy-image";
   const unpatches = [];
+  let buf = [];
   const dbg = (m) => {
     console.log("[CopyImage] " + m);
-    try { showToast("[CI] " + m); } catch {}
+    buf.push(m);
   };
-  dbg("ロード完了");
+  const flush = () => {
+    const text = buf.join("\n");
+    buf = [];
+    try { ReactNative.Alert.alert("CopyImage診断", text); } catch (e) { showToast(text); }
+  };
 
   function toBase64(url) {
     return fetch(url)
@@ -145,7 +150,7 @@
       if (key !== "MessageLongPressActionSheet" || !message) return;
       const url = findImageUrl(message);
       dbg("url=" + (url ? "あり" : "なし att=" + message.attachments?.length + " emb=" + message.embeds?.length));
-      if (!url) return;
+      if (!url) { flush(); return; }
 
       Promise.resolve(component)
         .then((instance) => {
@@ -155,10 +160,10 @@
             try {
               dbg("inject開始");
               inject(sheet, url);
-              dbg("inject完了");
+              dbg("inject完了"); flush();
             } catch (e) {
               console.error("[CopyImage]", e);
-              dbg("injectエラー: " + (e?.message ?? e));
+              dbg("injectエラー: " + (e?.message ?? e)); flush();
             }
           });
         })
