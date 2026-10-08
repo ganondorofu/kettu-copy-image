@@ -35,7 +35,8 @@
   }
 
   async function copyImage(url) {
-    ActionSheet.hideActionSheet();
+    try { showToast("CopyImage v7: 開始"); } catch {}
+    try { ActionSheet.hideActionSheet(); } catch (e) { console.log("[CopyImage] hide失敗", e); }
     try {
       if (typeof clipboard.setImage !== "function")
         throw new Error("このクライアントは画像コピー非対応");
@@ -53,14 +54,16 @@
             .join("\n");
       } catch {}
       clipboard.setString(url);
-      try {
-        ReactNative.Alert.alert(
-          "画像をコピーできませんでした",
-          msg + "\n\n代わりに画像のリンクをコピーしました。"
-        );
-      } catch {
-        showToast("コピー失敗: " + msg, getAssetIDByName("Small"));
-      }
+      setTimeout(() => {
+        try {
+          ReactNative.Alert.alert(
+            "画像をコピーできませんでした",
+            msg + "\n\n代わりに画像のリンクをコピーしました。"
+          );
+        } catch {
+          showToast("コピー失敗: " + msg, getAssetIDByName("Small"));
+        }
+      }, 400);
     }
   }
 
