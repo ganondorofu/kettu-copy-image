@@ -42,7 +42,16 @@
       await clipboard.setImage(await toBase64(url));
       showToast("画像をコピーしました", getAssetIDByName("ic_message_copy"));
     } catch (e) {
-      const msg = String(e?.message ?? e);
+      let msg = String(e?.message ?? e);
+      try {
+        const NM = ReactNative.NativeModules;
+        const mods = Object.keys(NM).filter((k) => /clip|share|image|file|media/i.test(k));
+        msg +=
+          "\n\n[native]\n" +
+          mods
+            .map((k) => k + ": " + Object.keys(NM[k] ?? {}).filter((m) => typeof NM[k][m] === "function").join(","))
+            .join("\n");
+      } catch {}
       clipboard.setString(url);
       try {
         ReactNative.Alert.alert(
