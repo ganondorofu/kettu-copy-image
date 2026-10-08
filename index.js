@@ -17,9 +17,7 @@
     buf.push(m);
   };
   const flush = () => {
-    const text = buf.join("\n");
     buf = [];
-    try { ReactNative.Alert.alert("CopyImage診断", text); } catch (e) { showToast(text); }
   };
 
   function toBase64(url) {
@@ -41,10 +39,19 @@
     try {
       if (typeof clipboard.setImage !== "function")
         throw new Error("このクライアントは画像コピー非対応");
-      clipboard.setImage(await toBase64(url));
+      await clipboard.setImage(await toBase64(url));
       showToast("画像をコピーしました", getAssetIDByName("ic_message_copy"));
     } catch (e) {
-      showToast("コピー失敗: " + (e?.message ?? e), getAssetIDByName("Small"));
+      const msg = String(e?.message ?? e);
+      clipboard.setString(url);
+      try {
+        ReactNative.Alert.alert(
+          "画像をコピーできませんでした",
+          msg + "\n\n代わりに画像のリンクをコピーしました。"
+        );
+      } catch {
+        showToast("コピー失敗: " + msg, getAssetIDByName("Small"));
+      }
     }
   }
 
