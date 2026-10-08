@@ -96,19 +96,22 @@
     const onPress = () => copyImage(url);
 
     // 新レイアウト: ActionSheetRowGroup の中に ActionSheetRow が並ぶ
-    const groups = findInReactTree(
+    // 型名は最小化されるので使わず、「コピー」系ラベルの行を含む配列を探す
+    const rowLabel = (c) => String(c?.props?.label ?? c?.props?.message ?? "");
+    const children = findInReactTree(
       sheet,
-      (x) => Array.isArray(x) && x[0]?.type?.name === "ActionSheetRowGroup"
+      (x) =>
+        Array.isArray(x) &&
+        x.some((c) => c?.type && c?.props?.icon) &&
+        x.some((c) => /コピー|copy/i.test(rowLabel(c)))
     );
-    const children = groups?.[1]?.props?.children;
     dbg(
-      "groups=" + (groups ? groups.length : "なし") +
-      " g1children=" + (Array.isArray(children) ? children.length : typeof children) +
-      " labels=" + (Array.isArray(children) ? children.map((c) => c?.props?.label ?? c?.props?.message ?? c?.type?.name ?? "?").join("|") : "-")
+      "rows=" + (Array.isArray(children) ? children.length : "なし") +
+      " labels=" + (Array.isArray(children) ? children.map((c) => rowLabel(c) || "?").join("|") : "-")
     );
     if (Array.isArray(children) && children.length) {
       if (children.some((c) => c?.key === KEY)) return;
-      const template = children.find((c) => c?.type);
+      const template = children.find((c) => c?.type && c?.props?.icon);
       if (!template) { dbg("templateなし"); return; }
       const tIcon = template.props?.icon;
       const row = React.createElement(template.type, {
@@ -132,11 +135,9 @@
             }
           : undefined,
       });
-      const i = children.findIndex(
-        (c) =>
-          String(c?.props?.label ?? "").toUpperCase().includes("COPY") ||
-          String(c?.props?.message ?? "").toUpperCase().includes("COPY")
-      );
+      // 「画像を保存」の次、なければ最初の「コピー」系の次
+      let i = children.findIndex((c) => /画像を保存|save image/i.test(rowLabel(c)));
+      if (i === -1) i = children.findIndex((c) => /コピー|copy/i.test(rowLabel(c)));
       if (i !== -1) children.splice(i + 1, 0, row);
       else children.push(row);
       dbg("グループに追加 i=" + i + " len=" + children.length);
