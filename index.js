@@ -67,6 +67,29 @@
     );
   }
 
+  function dumpTree(root) {
+    const out = [];
+    const seen = new Set();
+    const name = (t) =>
+      typeof t === "string" ? t : t?.displayName ?? t?.name ?? t?.type?.name ?? t?.render?.name ?? typeof t;
+    (function walk(n, d, p) {
+      if (out.length >= 45 || d > 9 || n == null || typeof n !== "object" || seen.has(n)) return;
+      seen.add(n);
+      if (Array.isArray(n)) {
+        out.push(" ".repeat(d) + p + "[" + n.length + "]");
+        n.forEach((c, i) => walk(c, d + 1, i + ":"));
+        return;
+      }
+      if (n.props || n.type) {
+        const pr = n.props ?? {};
+        const lab = pr.label ?? pr.message ?? pr.title ?? "";
+        out.push(" ".repeat(d) + p + name(n.type) + (lab && typeof lab === "string" ? " '" + lab + "'" : ""));
+        if (pr.children) walk(pr.children, d + 1, "c:");
+      }
+    })(root, 0, "");
+    return out.join("\n");
+  }
+
   function inject(sheet, url) {
     const iconId =
       getAssetIDByName("ic_message_copy") ?? getAssetIDByName("CopyIcon") ?? getAssetIDByName("copy");
@@ -139,7 +162,7 @@
         })
       );
     } else {
-      dbg("未知のActionSheet構造");
+      dbg("未知のActionSheet構造\n" + dumpTree(sheet));
     }
   }
 
