@@ -40,8 +40,29 @@
     try {
       if (typeof clipboard.setImage !== "function")
         throw new Error("このクライアントは画像コピー非対応");
-      await clipboard.setImage(await toBase64(url));
+      const b64 = await toBase64(url);
+      const ret = await clipboard.setImage(b64);
       showToast("画像をコピーしました", getAssetIDByName("ic_message_copy"));
+      // 診断: 実際にクリップボードへ入ったか
+      const rep = [];
+      rep.push("b64長=" + b64.length + " 先頭=" + b64.slice(0, 12));
+      rep.push("setImage戻り=" + String(ret));
+      try { rep.push("hasImage=" + String(await clipboard.hasImage?.())); } catch (e) { rep.push("hasImage例外=" + e?.message); }
+      try { rep.push("hasString=" + String(await clipboard.hasString?.())); } catch (e) { rep.push("hasString例外=" + e?.message); }
+      try { rep.push("clipboard keys=" + Object.keys(clipboard).join(",")); } catch {}
+      try { rep.push("setImage=" + String(clipboard.setImage).slice(0, 160)); } catch {}
+      try {
+        const NM = ReactNative.NativeModules;
+        rep.push(
+          Object.keys(NM)
+            .filter((k) => /clip|share|image|file|media/i.test(k))
+            .map((k) => k + ": " + Object.keys(NM[k] ?? {}).filter((m) => typeof NM[k][m] === "function").join(","))
+            .join("\n")
+        );
+      } catch {}
+      setTimeout(() => {
+        try { ReactNative.Alert.alert("CopyImage診断", rep.join("\n")); } catch {}
+      }, 400);
     } catch (e) {
       let msg = String(e?.message ?? e);
       try {
