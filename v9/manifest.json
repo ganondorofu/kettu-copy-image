@@ -1,0 +1,8 @@
+{
+  "name": "CopyImage v9",
+  "description": "画像の長押しメニューに「画像をコピー」を追加し、クリップボードへ画像そのものをコピーします。",
+  "authors": [{ "name": "komeniki" }],
+  "main": "index.js",
+  "hash": "a37a05663752409d881766e5a6d8b9c802576502",
+  "vendetta": { "icon": "ic_message_copy" }
+}
