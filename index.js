@@ -60,9 +60,8 @@
             .join("\n")
         );
       } catch {}
-      setTimeout(() => {
-        try { ReactNative.Alert.alert("CopyImage診断", rep.join("\n")); } catch {}
-      }, 400);
+      clipboard.setString("CopyImage v8診断\n" + rep.join("\n"));
+      showToast("v8: 診断をクリップボードにコピーしました。チャットに貼り付けてください");
     } catch (e) {
       let msg = String(e?.message ?? e);
       try {
