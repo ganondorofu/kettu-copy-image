@@ -1,0 +1,8 @@
+{
+  "name": "CopyImage (Native)",
+  "description": "画像の長押しメニューに「画像をコピー」を追加します。改造版 KettuXposed が必要です。",
+  "authors": [{ "name": "komeniki" }],
+  "main": "index.js",
+  "hash": "6ef6fc1ebda541d4bc39fee00e5292efe27d8f3c",
+  "vendetta": { "icon": "ic_message_copy" }
+}
