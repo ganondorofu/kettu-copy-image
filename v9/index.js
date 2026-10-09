@@ -8,8 +8,8 @@
   const { Forms } = vendetta.ui.components;
 
   const ActionSheet = findByProps("openLazy", "hideActionSheet");
-  const LABEL = "画像をコピー";
-  const KEY = "copy-image";
+  const LABEL = "画像をコピー (v9)";
+  const KEY = "copy-image-v9";
   const unpatches = [];
   let buf = [];
   const dbg = (m) => {
