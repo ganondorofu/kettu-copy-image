@@ -43,25 +43,27 @@
       const b64 = await toBase64(url);
       const ret = await clipboard.setImage(b64);
       showToast("画像をコピーしました", getAssetIDByName("ic_message_copy"));
-      // 診断: 実際にクリップボードへ入ったか
+      // 診断v9: ネイティブモジュールの実体を直接引いて、メソッド名を列挙する
+      const names = ["NativeAdsModule","NativeAppAttestModule","NativeAppDatabaseModule","NativeAppIconModule","NativeAppLifecycleModule","NativeAppRatingRequestModule","NativeAppStoreModule","NativeAudioManagerModule","NativeAudioPlayerModule","NativeAudioRouteEmitterModule","NativeAuthenticationModule","NativeBrowserManagerModule","NativeCacheModule","NativeChatModule","NativeClientInfoModule","NativeCommandClipboardModule","NativeCompressionModule","NativeDateFormatUtilsModule","NativeDeviceAccessibilityModule","NativeDeviceLocaleModule","NativeDeviceModule","NativeDeviceSettingsModule","NativeDeviceThermalStateModule","NativeDigitalCredentialModule","NativeDiskUsageModule","NativeFastConnectModule","NativeFileModule","NativeFontModule","NativeI18nModule","NativeImageManagerModule","NativeInstallTimeModule","NativeIntentsModule","NativeJSWatchdogModule","NativeJankSessionModule","NativeJankStatsModule","NativeKeyCommandsModule","NativeKeyboardModule","NativeLinkingModule","NativeMediaEngineModule","NativeMediaManagerModule","NativeMetaQuestModule","NativeMetricMonitorModule","NativeMobileVoiceOverlayModule","NativeNotifSettingsModule","NativeOnDemandResourceModule","NativePermissionManagerModule","NativePlayAgeSignalsModule","NativePlayIntegrityModule","NativePortalFromNativeModule","NativeProximitySensorManagerModule","NativePushNotificationMonitorModule","NativeReactAssetModule","NativeRemoteAuthCryptoModule","NativeSafeAreaInsetsModule","NativeScreenWakeLockModule","NativeSecurityKeyManagerModule","NativeShareManagerModule","NativeSystraceModule","NativeTTIManagerModule","NativeTTIModule","NativeTelecomModule","NativeTelemetryRingModule","NativeThemeModule","NativeTimezoneHermesFixModule","NativeTouchEventAnalyticsModule","DCDClipboardManager","DCDFileManager","DCDChat","DCDDevice","DCDSettings","RNCClipboard","RNCClipboardModule","ClipboardModule","BunnyNative","VendettaNative","KettuNative","RTNFileManager","RTNLoader","NativeClipboard","ImageManager","ShareManager"];
+      const NMp = globalThis.nativeModuleProxy ?? ReactNative.NativeModules ?? {};
+      const fnsOf = (m) => {
+        const set = new Set();
+        try { for (const k in m) set.add(k); } catch {}
+        try { Object.getOwnPropertyNames(m).forEach((k) => set.add(k)); } catch {}
+        try { const p = Object.getPrototypeOf(m); if (p) Object.getOwnPropertyNames(p).forEach((k) => set.add(k)); } catch {}
+        return [...set].filter((k) => k !== "constructor");
+      };
       const rep = [];
-      rep.push("b64長=" + b64.length + " 先頭=" + b64.slice(0, 12));
-      rep.push("setImage戻り=" + String(ret));
-      try { rep.push("hasImage=" + String(await clipboard.hasImage?.())); } catch (e) { rep.push("hasImage例外=" + e?.message); }
-      try { rep.push("hasString=" + String(await clipboard.hasString?.())); } catch (e) { rep.push("hasString例外=" + e?.message); }
-      try { rep.push("clipboard keys=" + Object.keys(clipboard).join(",")); } catch {}
-      try { rep.push("setImage=" + String(clipboard.setImage).slice(0, 160)); } catch {}
-      try {
-        const NM = ReactNative.NativeModules;
-        rep.push(
-          Object.keys(NM)
-            .filter((k) => /clip|share|image|file|media/i.test(k))
-            .map((k) => k + ": " + Object.keys(NM[k] ?? {}).filter((m) => typeof NM[k][m] === "function").join(","))
-            .join("\n")
-        );
-      } catch {}
-      clipboard.setString("CopyImage v8診断\n" + rep.join("\n"));
-      showToast("v8: 診断をクリップボードにコピーしました。チャットに貼り付けてください");
+      for (const n of names) {
+        let m;
+        try { m = NMp[n]; } catch {}
+        if (!m) try { m = globalThis.__turboModuleProxy?.(n); } catch {}
+        if (!m) continue;
+        rep.push(n + ": " + fnsOf(m).join(","));
+      }
+      rep.unshift("見つかったモジュール数=" + rep.length);
+      clipboard.setString("CopyImage v9診断\n" + rep.join("\n"));
+      showToast("v9: 診断をクリップボードにコピーしました。チャットに貼り付けてください");
     } catch (e) {
       let msg = String(e?.message ?? e);
       try {
